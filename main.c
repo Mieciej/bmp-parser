@@ -5,10 +5,10 @@
 #include "pixel.h"
 
 void print_header_info(BITMAPFILEHEADER *file_header, BITMAPINFOHEADER *info_header);
-
+void print_histogram(char *name, int *pixel_data, size_t n_pixels);
 int main(int argc, char const *argv[])
 {
-    FILE *file = fopen("c2.bmp","rb");
+    FILE *file = fopen("tux.bmp","rb");
     if(file==NULL) 
     {
         printf("Failed to read a file.\n");
@@ -57,10 +57,12 @@ int main(int argc, char const *argv[])
         }
         fseek(file,1,SEEK_CUR);
     }
-    for (size_t i = 0; i < 16; i++)
-    {
-        printf("\t%lu-%lu: %.2f\n",i*16,(i+1)*16-1,(float)green[i]*100.0/(float)((float)info_header.biWidth*(float)info_header.biHeight));
-    }
+
+    size_t n_pixels = info_header.biHeight* info_header.biWidth;
+    print_histogram("Red",red,n_pixels);
+    print_histogram("Green",green,n_pixels);
+    print_histogram("Blue",blue,n_pixels);
+
     fclose(file);
     
     
@@ -89,4 +91,13 @@ void print_header_info(BITMAPFILEHEADER *file_header, BITMAPINFOHEADER *info_hea
     printf("\tbiYPelsPerMeter\t%d\n",info_header->biYPelsPerMeter);
     printf("\tbiClrUsed\t%u\n",info_header->biClrUsed);
     printf("\tbiClrImportant\t%u\n",info_header->biClrImportant);
+}
+
+void print_histogram(char *name, int *pixel_data, size_t n_pixels )
+{
+    printf("%s:\n",name);
+    for (size_t i = 0; i < 16; i++)
+    {
+        printf("\t%lu-%lu:   \t%.2f%%\n",i*16,(i+1)*16-1,(float)pixel_data[i]*100.0/(float)n_pixels);
+    }
 }
