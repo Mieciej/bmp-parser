@@ -1,12 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include "bmp.h"
+#include "pixel.h"
 
 void print_header_info(BITMAPFILEHEADER *file_header, BITMAPINFOHEADER *info_header);
 
 int main(int argc, char const *argv[])
 {
-    FILE *file = fopen("c.bmp","rb");
+    FILE *file = fopen("c2.bmp","rb");
     if(file==NULL) 
     {
         printf("Failed to read a file.\n");
@@ -35,9 +37,30 @@ int main(int argc, char const *argv[])
 
     fseek(file,info_header.biSize-40,SEEK_CUR);
     print_header_info(&file_header,&info_header);
-        
+    if (info_header.biCompression !=0 || info_header.biBitCount!=24)
+    {
+        printf("Histogram calculation is not supported.\n");
+        return 0;
+    }
+    
 
-
+    Pixel *pixel_row = malloc(sizeof(Pixel)*(info_header.biWidth));
+    int red[16] ={0}, green[16]={0}, blue[16]={0};
+    for (size_t i = 0; i < info_header.biHeight; i++)
+    {
+        fread(pixel_row,info_header.biWidth*sizeof(Pixel),1,file);
+        for (size_t i = 0; i < info_header.biWidth; i++)
+        {
+            red[pixel_row[i].red/16]++;
+            green[pixel_row[i].green/16]++;
+            blue[pixel_row[i].blue/16]++;
+        }
+        fseek(file,1,SEEK_CUR);
+    }
+    for (size_t i = 0; i < 16; i++)
+    {
+        printf("\t%lu-%lu: %.2f\n",i*16,(i+1)*16-1,(float)green[i]*100.0/(float)((float)info_header.biWidth*(float)info_header.biHeight));
+    }
     fclose(file);
     
     
@@ -66,7 +89,4 @@ void print_header_info(BITMAPFILEHEADER *file_header, BITMAPINFOHEADER *info_hea
     printf("\tbiYPelsPerMeter\t%d\n",info_header->biYPelsPerMeter);
     printf("\tbiClrUsed\t%u\n",info_header->biClrUsed);
     printf("\tbiClrImportant\t%u\n",info_header->biClrImportant);
-
-
-
 }
