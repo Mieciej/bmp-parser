@@ -6,7 +6,8 @@
 #include "pixel.h"
 void print_header_info(BITMAPFILEHEADER *file_header, BITMAPINFOHEADER *info_header);
 void print_histogram(char *name, int *pixel_data, size_t n_pixels);
-void output_grayscale(BITMAPFILEHEADER *file_header,BITMAPINFOHEADER *info_header, Pixel **pixel_array);
+
+void output_grayscale(BITMAPFILEHEADER *file_header,BITMAPINFOHEADER *info_header,uint8_t *rest_info_header, Pixel **pixel_array);
 
 int main(int argc, char const *argv[])
 {
@@ -23,9 +24,9 @@ int main(int argc, char const *argv[])
     BITMAPINFOHEADER info_header;
     fread(&info_header,sizeof(info_header),1,file);
 
-
-    fseek(file,info_header.biSize-40,SEEK_CUR);
-
+    uint8_t rest_info_header[info_header.biSize-40];
+    //fseek(file,info_header.biSize-40,SEEK_CUR);
+    fread(&rest_info_header,sizeof(rest_info_header),1,file);
 
     print_header_info(&file_header,&info_header);
     if (info_header.biCompression !=0 || info_header.biBitCount!=24)
@@ -33,8 +34,6 @@ int main(int argc, char const *argv[])
         printf("Histogram calculation is not supported.\n");
         return 0;
     }
-    
-
     Pixel **pixel_array = malloc(sizeof(Pixel*)*info_header.biHeight);
     int red[16] ={0}, green[16]={0}, blue[16]={0};
     size_t padding = (size_t)floor((info_header.biWidth*24+31)/32)*4-sizeof(Pixel)*info_header.biWidth;
@@ -61,7 +60,7 @@ int main(int argc, char const *argv[])
     print_histogram("Blue",blue,n_pixels);
 
 
-    output_grayscale(&file_header,&info_header,pixel_array);
+    output_grayscale(&file_header,&info_header,rest_info_header,pixel_array);
 
     return 0;
 }
@@ -100,16 +99,17 @@ void print_histogram(char *name, int *pixel_data, size_t n_pixels )
 }
 
 
-void output_grayscale(BITMAPFILEHEADER *file_header,BITMAPINFOHEADER *info_header, Pixel **pixel_array)
+void output_grayscale(BITMAPFILEHEADER *file_header,BITMAPINFOHEADER *info_header,uint8_t *rest_info_header, Pixel **pixel_array)
 {
     FILE *file =fopen("output.bmp","wb");
     fwrite(file_header,sizeof(BITMAPFILEHEADER),1,file);
     fwrite(info_header,sizeof(BITMAPINFOHEADER),1,file);
-    uint8_t i0 =0x00;
-    for (size_t i = 0; i < info_header->biSize-40; i++) fwrite(&i0,1,1,file);
+    fwrite(rest_info_header,info_header->biSize-40,1,file);
 
     Pixel *pixel = malloc(sizeof(Pixel));
     size_t padding = (size_t)floor((info_header->biWidth*24+31)/32)*4-sizeof(Pixel)*info_header->biWidth;
+
+    uint8_t i0 =0x00;
     for (size_t i = 0; i < info_header->biHeight; i++)
     {
         for (size_t j = 0; j < info_header->biWidth; j++)
