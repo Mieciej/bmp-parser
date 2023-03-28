@@ -8,7 +8,7 @@ void print_header_info(BITMAPFILEHEADER *file_header, BITMAPINFOHEADER *info_hea
 void print_histogram(char *name, int *pixel_data, size_t n_pixels);
 int main(int argc, char const *argv[])
 {
-    FILE *file = fopen("c2.bmp","rb");
+    FILE *file = fopen("tux.bmp","rb");
     if(file==NULL) 
     {
         printf("Failed to read a file.\n");
@@ -46,28 +46,39 @@ int main(int argc, char const *argv[])
     }
     
 
-    Pixel *pixel_row = malloc(sizeof(Pixel)*(info_header.biWidth));
+    Pixel **pixel_array = malloc(sizeof(Pixel*)*info_header.biHeight);
     int red[16] ={0}, green[16]={0}, blue[16]={0};
     for (size_t i = 0; i < info_header.biHeight; i++)
     {
+        Pixel *pixel_row = malloc(sizeof(Pixel)*(info_header.biWidth));
         fread(pixel_row,info_header.biWidth*sizeof(Pixel),1,file);
-        for (size_t i = 0; i < info_header.biWidth; i++)
+        pixel_array[i]=pixel_row;
+        for (size_t j = 0; j < info_header.biWidth; j++)
         {
-            red[pixel_row[i].red/16]++;
-            green[pixel_row[i].green/16]++;
-            blue[pixel_row[i].blue/16]++;
+            red[pixel_row[j].red/16]++;
+            green[pixel_row[j].green/16]++;
+            blue[pixel_row[j].blue/16]++;
         }
-        fseek(file,1,SEEK_CUR);
+        //fseek(file,1,SEEK_CUR);
     }
 
     size_t n_pixels = info_header.biHeight* info_header.biWidth;
     print_histogram("Red",red,n_pixels);
     print_histogram("Green",green,n_pixels);
     print_histogram("Blue",blue,n_pixels);
-
     fclose(file);
-    
-    
+    file =fopen("output.bmp","wb");
+    fwrite(&file_header,sizeof(file_header),1,file);
+    fwrite(&info_header,sizeof(info_header),1,file);
+    uint8_t i0 =0x0;
+    fwrite(&i0,1,info_header.biSize-40,file);
+    uint8_t i255 =0xFF;
+    for (size_t i = 0; i < info_header.biHeight; i++)
+    {
+        fwrite(pixel_array[i],info_header.biWidth*sizeof(Pixel),1,file);
+        //fwrite(&i0,1,1,file);
+    }
+    fclose(file);
 
 
     return 0;
