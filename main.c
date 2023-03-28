@@ -8,7 +8,7 @@ void print_header_info(BITMAPFILEHEADER *file_header, BITMAPINFOHEADER *info_hea
 void print_histogram(char *name, int *pixel_data, size_t n_pixels);
 int main(int argc, char const *argv[])
 {
-    FILE *file = fopen("tux.bmp","rb");
+    FILE *file = fopen("c2.bmp","rb");
     if(file==NULL) 
     {
         printf("Failed to read a file.\n");
@@ -16,24 +16,26 @@ int main(int argc, char const *argv[])
     }
 
     BITMAPFILEHEADER file_header;
-    fread(&file_header.bfType,2,1,file);
-    fread(&file_header.bfSize,4,1,file);
-    fread(&file_header.bfReserved1,2,1,file);
-    fread(&file_header.bfReserved2,2,1,file);
-    fread(&file_header.bfOffBits,4,1,file);
+    fread(&file_header,sizeof(file_header),1,file);
+    // fread(&file_header.bfType,2,1,file);
+    // fread(&file_header.bfSize,4,1,file);
+    // fread(&file_header.bfReserved1,2,1,file);
+    // fread(&file_header.bfReserved2,2,1,file);
+    // fread(&file_header.bfOffBits,4,1,file);
 
     BITMAPINFOHEADER info_header;
-    fread(&info_header.biSize,4,1,file);
-    fread(&info_header.biWidth,4,1,file);
-    fread(&info_header.biHeight,4,1,file);
-    fread(&info_header.biPlanes,2,1,file);
-    fread(&info_header.biBitCount,2,1,file);
-    fread(&info_header.biCompression,4,1,file);
-    fread(&info_header.biSizeImage,4,1,file);
-    fread(&info_header.biXPelsPerMeter,4,1,file);
-    fread(&info_header.biYPelsPerMeter,4,1,file);
-    fread(&info_header.biClrUsed,4,1,file);
-    fread(&info_header.biClrImportant,4,1,file);
+    fread(&info_header,sizeof(info_header),1,file);
+    // fread(&info_header.biSize,4,1,file);
+    // fread(&info_header.biWidth,4,1,file);
+    // fread(&info_header.biHeight,4,1,file);
+    // fread(&info_header.biPlanes,2,1,file);
+    // fread(&info_header.biBitCount,2,1,file);
+    // fread(&info_header.biCompression,4,1,file);
+    // fread(&info_header.biSizeImage,4,1,file);
+    // fread(&info_header.biXPelsPerMeter,4,1,file);
+    // fread(&info_header.biYPelsPerMeter,4,1,file);
+    // fread(&info_header.biClrUsed,4,1,file);
+    // fread(&info_header.biClrImportant,4,1,file);
 
     fseek(file,info_header.biSize-40,SEEK_CUR);
     print_header_info(&file_header,&info_header);
@@ -82,7 +84,7 @@ void print_header_info(BITMAPFILEHEADER *file_header, BITMAPINFOHEADER *info_hea
     printf("BITMAPINFOHEADER:\n");
     printf("\tbiSize:\t\t%u\n",info_header->biSize);
     printf("\tbiWidth:\t%d\n",info_header->biWidth);
-    printf("\tiHeight:\t%d\n",info_header->biHeight);
+    printf("\tbiHeight:\t%d\n",info_header->biHeight);
     printf("\tbiPlanes:\t%u\n",info_header->biPlanes);
     printf("\tbiBitCount:\t%u\n",info_header->biBitCount);
     printf("\tbiCompression:\t%u\n",info_header->biCompression);

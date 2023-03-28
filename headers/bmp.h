@@ -5,7 +5,7 @@
 typedef uint16_t WORD;
 typedef uint32_t DWORD;
 typedef int32_t LONG;
-
+#pragma pack(push, 1)
 // https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapfileheader
 typedef struct tagBITMAPFILEHEADER {
   WORD  bfType;
@@ -29,5 +29,5 @@ typedef struct tagBITMAPINFOHEADER {
   DWORD biClrUsed;
   DWORD biClrImportant;
 } BITMAPINFOHEADER, *LPBITMAPINFOHEADER, *PBITMAPINFOHEADER;
-
+#pragma pack(pop)
 #endif
