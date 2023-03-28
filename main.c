@@ -3,7 +3,7 @@
 #include <math.h>
 #include "bmp.h"
 #include "pixel.h"
-
+#include <string.h>
 void print_header_info(BITMAPFILEHEADER *file_header, BITMAPINFOHEADER *info_header);
 void print_histogram(char *name, int *pixel_data, size_t n_pixels);
 int main(int argc, char const *argv[])
@@ -17,25 +17,10 @@ int main(int argc, char const *argv[])
 
     BITMAPFILEHEADER file_header;
     fread(&file_header,sizeof(file_header),1,file);
-    // fread(&file_header.bfType,2,1,file);
-    // fread(&file_header.bfSize,4,1,file);
-    // fread(&file_header.bfReserved1,2,1,file);
-    // fread(&file_header.bfReserved2,2,1,file);
-    // fread(&file_header.bfOffBits,4,1,file);
 
     BITMAPINFOHEADER info_header;
     fread(&info_header,sizeof(info_header),1,file);
-    // fread(&info_header.biSize,4,1,file);
-    // fread(&info_header.biWidth,4,1,file);
-    // fread(&info_header.biHeight,4,1,file);
-    // fread(&info_header.biPlanes,2,1,file);
-    // fread(&info_header.biBitCount,2,1,file);
-    // fread(&info_header.biCompression,4,1,file);
-    // fread(&info_header.biSizeImage,4,1,file);
-    // fread(&info_header.biXPelsPerMeter,4,1,file);
-    // fread(&info_header.biYPelsPerMeter,4,1,file);
-    // fread(&info_header.biClrUsed,4,1,file);
-    // fread(&info_header.biClrImportant,4,1,file);
+
 
     fseek(file,info_header.biSize-40,SEEK_CUR);
     print_header_info(&file_header,&info_header);
@@ -48,6 +33,8 @@ int main(int argc, char const *argv[])
 
     Pixel **pixel_array = malloc(sizeof(Pixel*)*info_header.biHeight);
     int red[16] ={0}, green[16]={0}, blue[16]={0};
+    size_t padding = (size_t)floor((info_header.biWidth*24+31)/32)*4-sizeof(Pixel)*info_header.biWidth;
+
     for (size_t i = 0; i < info_header.biHeight; i++)
     {
         Pixel *pixel_row = malloc(sizeof(Pixel)*(info_header.biWidth));
@@ -59,9 +46,9 @@ int main(int argc, char const *argv[])
             green[pixel_row[j].green/16]++;
             blue[pixel_row[j].blue/16]++;
         }
-        //fseek(file,1,SEEK_CUR);
+        fseek(file,padding,SEEK_CUR);
     }
-
+ 
     size_t n_pixels = info_header.biHeight* info_header.biWidth;
     print_histogram("Red",red,n_pixels);
     print_histogram("Green",green,n_pixels);
@@ -75,8 +62,18 @@ int main(int argc, char const *argv[])
     uint8_t i255 =0xFF;
     for (size_t i = 0; i < info_header.biHeight; i++)
     {
-        fwrite(pixel_array[i],info_header.biWidth*sizeof(Pixel),1,file);
-        //fwrite(&i0,1,1,file);
+        Pixel *pixel = malloc(sizeof(Pixel));
+        for (size_t j = 0; j < info_header.biWidth; j++)
+        {
+            pixel =  memcpy(pixel,&pixel_array[i][j],sizeof(Pixel));
+            size_t average = (pixel->red+pixel->green+pixel->blue)/3;
+            pixel->red = average;
+            pixel->green = average;
+            pixel->blue = average;
+            fwrite(pixel,sizeof(Pixel),1,file);
+        }
+        free(pixel);
+        fwrite(&i0,1,padding,file);
     }
     fclose(file);
 
